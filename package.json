@@ -14,5 +14,18 @@
   "devDependencies": {
     "@types/node": "^17.0.1",
     "typescript": "^4.5.4"
+  },
+  "dependencies": {
+    "@mikro-orm/cli": "^4.5.9",
+    "@mikro-orm/core": "^4.5.9",
+    "@mikro-orm/postgresql": "^4.5.9",
+    "ts-node": "^10.4.0"
+  },
+  "mikro-orm": {
+    "useTsNode": true,
+    "configPaths": [
+      "./src/mikro-orm.config.ts",
+      "./dist/mikro-orm.config.js"
+    ]
   }
 }
