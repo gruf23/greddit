@@ -7,7 +7,7 @@ import path from "path";
 export default {
   migrations: {
     path: path.join(__dirname, './migrations'),
-    pattern: /^[\w-]+\d+\.ts$/,
+    pattern: /^[\w-]+\d+\.[js]s$/,
   },
   entities: [Post, User],
   type: "postgresql",
