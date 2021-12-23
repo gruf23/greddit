@@ -42,6 +42,11 @@
     <property name="ts.external.directory.path" value="$PROJECT_DIR$/node_modules/typescript/lib" />
     <property name="vue.rearranger.settings.migration" value="true" />
   </component>
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$" />
+    </key>
+  </component>
   <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
@@ -58,7 +63,7 @@
       <workItem from="1639989619589" duration="12969000" />
       <workItem from="1640159262888" duration="6000" />
       <workItem from="1640164232486" duration="14274000" />
-      <workItem from="1640255786939" duration="688000" />
+      <workItem from="1640255786939" duration="1586000" />
     </task>
     <servers />
   </component>
