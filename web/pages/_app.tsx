@@ -1,5 +1,5 @@
 import { createClient, dedupExchange, fetchExchange, Provider } from 'urql';
-import { cacheExchange, QueryInput, Cache } from '@urql/exchange-graphcache';
+import { cacheExchange, QueryInput, Cache, query } from '@urql/exchange-graphcache';
 import '../styles/globals.css';
 import { MeDocument } from '../generated/graphql';
 
@@ -51,6 +51,14 @@ const urqlClient = createClient({
               }
             }
           );
+        },
+        logout: (_result, args, cache, info) => {
+          betterUpdateQuery(
+            cache,
+            {query: MeDocument},
+            _result,
+            (query, data) => ({me: null})
+          )
         }
       }
     }
