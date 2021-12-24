@@ -12,6 +12,7 @@ import connectRedis from 'connect-redis';
 import { __prod__ } from './constants';
 import { MyContext } from './types';
 import { ApolloServerPluginLandingPageGraphQLPlayground } from "apollo-server-core";
+import cors from 'cors';
 
 
 declare module "express-session" {
@@ -26,6 +27,11 @@ const main = async () => {
   const app = express();
   const RedisStore = connectRedis(session);
   const redisClient = redis.createClient();
+
+  app.use(cors({
+    origin: 'http://localhost:3000',
+    credentials: true
+  }));
 
   const sessionMiddleware = session({
     name: 'qid',
@@ -63,7 +69,7 @@ const main = async () => {
   });
 
   await apolloServer.start();
-  apolloServer.applyMiddleware({app});
+  apolloServer.applyMiddleware({app, cors: false});
 
   app.listen(4000, () => {
     console.log('Server started on localhost:4000');

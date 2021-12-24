@@ -26,7 +26,7 @@ const InputField: React.FC<Props> = ({label, ...props}) => {
               )}
               <input {...field} {...props} className={'shadow appearance-none border rounded w-full py-2 px-3 text-black'}/>
               {meta.touched && meta.error && (
-                <span>{meta.error}</span>
+                <span className="block text-red-500 text-sm">{meta.error}</span>
               )}
             </div>
         )
