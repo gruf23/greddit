@@ -2,6 +2,7 @@ import { Arg, Ctx, Field, InputType, Mutation, ObjectType, Query, Resolver } fro
 import { MyContext } from '../types';
 import { User } from '../entities/User';
 import * as argon2 from 'argon2';
+import { COOKIE_NAME } from '../constants';
 
 @InputType()
 class UsernamePasswordInput {
@@ -32,7 +33,7 @@ export class UserResolver {
   @Query(() => User, {nullable: true})
   async me(@Ctx() {em, req}: MyContext) {
     if (!req.session.userId) {
-      return null
+      return null;
     }
 
     return await em.findOne(User, {id: req.session.userId});
@@ -61,9 +62,9 @@ export class UserResolver {
             message: 'password must be at least 8 characters'
           }
         ]
-      }
+      };
     }
-    const existingUser = await em.findOne(User, {username: options.username})
+    const existingUser = await em.findOne(User, {username: options.username});
     if (existingUser) {
       return {
         errors: [
@@ -72,7 +73,7 @@ export class UserResolver {
             message: 'this username is already taken'
           }
         ]
-      }
+      };
     }
     const hashedPassword = await argon2.hash(options.password);
     const user = em.create(User, {
@@ -119,5 +120,23 @@ export class UserResolver {
     return {
       user
     };
+  }
+
+  @Mutation(() => Boolean)
+  async logout(
+    @Ctx() {req, res}: MyContext
+  ) {
+    return new Promise(resolve => {
+      req.session.destroy((err) => {
+        res.clearCookie(COOKIE_NAME);
+        if (err) {
+          console.log(err);
+          resolve(err);
+          return;
+        }
+
+        resolve(true);
+      });
+    });
   }
 }
