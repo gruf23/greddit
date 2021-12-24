@@ -2,6 +2,9 @@ import React from 'react';
 import { Form, Formik, Field, FormikHelpers } from 'formik';
 import Wrapper from '../components/Wrapper';
 import InputField from '../components/InputField';
+import { useRegisterMutation } from '../generated/graphql';
+import { toErrorMap } from '../utils/toErrorMap';
+import { useRouter } from 'next/router';
 
 interface registerProps {
 
@@ -13,23 +16,27 @@ interface formValues {
 }
 
 const Register: React.FC<registerProps> = ({}) => {
+  const router = useRouter();
+  const [{}, register] = useRegisterMutation();
   return (
     <Wrapper>
       <Formik
         initialValues={{username: '', password: ''}}
-        onSubmit={(
+        onSubmit={async (
           values: formValues,
-          {setSubmitting}: FormikHelpers<formValues>
+          {setErrors}: FormikHelpers<formValues>
         ) => {
-          setTimeout(() => {
-            console.log(JSON.stringify(values, null, 2));
-            setSubmitting(false);
-          }, 1000);
+          const response = await register(values);
+          if (response.data?.register.errors) {
+            setErrors(toErrorMap(response.data.register.errors));
+          } else if (response.data?.register.user) {
+            await router.push('/');
+          }
         }}
       >
         {({
-          errors,
-          isSubmitting
+            errors,
+            isSubmitting
           }) => (
           <Form className="bg-white shadow-md card py-8 px-4">
             <InputField label={'Username'} id={'username'} name={'username'}/>

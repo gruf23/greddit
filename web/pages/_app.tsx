@@ -1,7 +1,19 @@
-import '../styles/globals.css'
+import { createClient, Provider } from 'urql';
+import '../styles/globals.css';
 
-function MyApp({ Component, pageProps }) {
-  return <Component {...pageProps} />
+const urqlClient = createClient({
+  url: 'http://localhost:4000/graphql',
+  fetchOptions: {
+    credentials: 'include'
+  }
+})
+
+function Greddit({Component, pageProps}) {
+  return (
+    <Provider value={urqlClient}>
+      <Component {...pageProps} />
+    </Provider>
+  );
 }
 
-export default MyApp
+export default Greddit;
