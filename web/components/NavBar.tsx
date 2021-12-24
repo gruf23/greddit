@@ -1,7 +1,7 @@
 import React from 'react';
 import Link from 'next/link';
 import { useLogoutMutation, useMeQuery } from '../generated/graphql';
-import { useRouter } from 'next/router';
+import { isServer } from '../utils/isServer';
 
 interface OwnProps {
 }
@@ -9,13 +9,10 @@ interface OwnProps {
 type Props = OwnProps;
 
 const NavBar: React.FC<Props> = (props) => {
-  const router = useRouter()
-  const [{data, fetching}] = useMeQuery();
+  const [{data, fetching}] = useMeQuery({
+    pause: isServer()
+  });
   const [{}, logout] = useLogoutMutation();
-  const logoutHandler = async () => {
-    await logout();
-    router.reload();
-  };
   let navBody = null;
 
   if (fetching) {
@@ -24,7 +21,7 @@ const NavBar: React.FC<Props> = (props) => {
     navBody = (
       <>
         <span className={'text-white pr-4'}>Hi, {data.me.username}</span>
-        <button onClick={() => logoutHandler()} className={'text-white hover:underline'}>Logout</button>
+        <button onClick={() => logout()} className={'text-white hover:underline'}>Logout</button>
       </>
     );
   } else {
