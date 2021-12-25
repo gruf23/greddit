@@ -14,6 +14,7 @@ interface registerProps {
 
 interface formValues {
   username: string,
+  email: string,
   password: string
 }
 
@@ -23,12 +24,12 @@ const Register: React.FC<registerProps> = ({}) => {
   return (
     <Wrapper>
       <Formik
-        initialValues={{username: '', password: ''}}
+        initialValues={{username: '', password: '', email: ''}}
         onSubmit={async (
           values: formValues,
           {setErrors}: FormikHelpers<formValues>
         ) => {
-          const response = await register(values);
+          const response = await register({options: values});
           if (response.data?.register.errors) {
             setErrors(toErrorMap(response.data.register.errors));
           } else if (response.data?.register.user) {
@@ -41,6 +42,7 @@ const Register: React.FC<registerProps> = ({}) => {
             isSubmitting
           }) => (
           <Form className="bg-white shadow-md card py-8 px-4">
+            <InputField label={'Email'} id={'email'} name={'email'}/>
             <InputField label={'Username'} id={'username'} name={'username'}/>
             <InputField label={'Password'} id={'password'} name={'password'} type={'password'}/>
             <button

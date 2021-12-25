@@ -7,13 +7,14 @@ import { toErrorMap } from '../utils/toErrorMap';
 import { useRouter } from 'next/router';
 import { createUrqlClient } from '../utils/createUrqlClient';
 import { NextUrqlClientConfig, withUrqlClient } from 'next-urql';
+import Link from 'next/link';
 
 interface loginProps {
 
 }
 
 interface formValues {
-  username: string,
+  usernameOrEmail: string,
   password: string
 }
 
@@ -23,7 +24,7 @@ const Login: React.FC<loginProps> = ({}) => {
   return (
     <Wrapper>
       <Formik
-        initialValues={{username: '', password: ''}}
+        initialValues={{usernameOrEmail: '', password: ''}}
         onSubmit={async (
           values: formValues,
           {setErrors}: FormikHelpers<formValues>
@@ -41,13 +42,16 @@ const Login: React.FC<loginProps> = ({}) => {
             isSubmitting
           }) => (
           <Form className="bg-white shadow-md card py-8 px-4">
-            <InputField label={'Username'} id={'username'} name={'username'}/>
+            <InputField label={'Username or Email'} id={'usernameOrEmail'} name={'usernameOrEmail'}/>
             <InputField label={'Password'} id={'password'} name={'password'} type={'password'}/>
-            <button
-              className={`group bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded focus:outline-none focus:shadow-outline ${isSubmitting ? `submitting` : ''}`}
-              type="submit">
-              Login
-            </button>
+            <div className="flex items-center justify-between">
+              <button
+                className={`group bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded focus:outline-none focus:shadow-outline ${isSubmitting ? `submitting` : ''}`}
+                type="submit">
+                Login
+              </button>
+              <Link href={'/forgot-password'}><a className={'hover:underline'}>Forgot password</a></Link>
+            </div>
           </Form>
         )}
       </Formik>
