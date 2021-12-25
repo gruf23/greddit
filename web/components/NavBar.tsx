@@ -29,6 +29,7 @@ const NavBar: React.FC<Props> = (props) => {
       <>
         <Link href={'/login'}><a className={'py-2 px-4 hover:underline text-white'}>Login</a></Link>
         <Link href={'/register'}><a className={'py-2 px-4 hover:underline text-white'}>Register</a></Link>
+        <Link href={'/forgot-password'}><a className={'py-2 px-4 hover:underline text-white'}>Forgot Password</a></Link>
       </>
     );
   }

@@ -34,6 +34,56 @@ class FieldError {
 
 @Resolver()
 export class UserResolver {
+  @Mutation(() => UserResponse, {nullable: true})
+  async changePassword(
+    @Arg('token') token: string,
+    @Arg('newPassword') newPassword: string,
+    @Ctx() {req, em, redis}: MyContext
+  ): Promise<UserResponse> {
+    if (newPassword.length < 8) {
+      return {
+        errors: [
+          {
+            field: 'newPassword',
+            message: 'password must be at least 8 characters'
+          }
+        ]
+      };
+    }
+    const userId = await redis.get(FORGOT_PASSWORD_PREFIX + token);
+    if (!userId) {
+      return {
+        errors: [
+          {
+            field: "token",
+            message: "token expired"
+          }
+        ]
+      };
+    }
+
+    const user = await em.findOne(User, {id: parseInt(userId, 10)});
+    if (!user) {
+      return {
+        errors: [
+          {
+            field: 'token',
+            message: 'User no longer exists'
+          }
+        ]
+      };
+    }
+
+    user.password = await argon2.hash(newPassword);
+    await em.persistAndFlush(user);
+
+    req.session.userId = user.id;
+
+    return {
+      user
+    };
+  }
+
   @Query(() => User, {nullable: true})
   async me(@Ctx() {em, req}: MyContext) {
     if (!req.session.userId) {
@@ -78,7 +128,7 @@ export class UserResolver {
         ]
       };
     }
-    if (options.password.length <= 7) {
+    if (options.password.length < 8) {
       return {
         errors: [
           {
@@ -187,7 +237,7 @@ export class UserResolver {
     }
 
     const token = v4();
-    await redis.set(FORGOT_PASSWORD_PREFIX + token, user.id, 'ex', 1000 * 60 * 60 * 24)
+    await redis.set(FORGOT_PASSWORD_PREFIX + token, user.id, 'ex', 1000 * 60 * 60 * 24);
 
     await sendEmail(
       email,

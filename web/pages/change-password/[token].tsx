@@ -1,19 +1,22 @@
 import { NextPage } from 'next';
 import { useRouter } from 'next/router';
-import { useLoginMutation } from '../../generated/graphql';
+import { useChangePasswordMutation, useLoginMutation } from '../../generated/graphql';
 import Wrapper from '../../components/Wrapper';
 import { Form, Formik, FormikHelpers } from 'formik';
 import { toErrorMap } from '../../utils/toErrorMap';
 import InputField from '../../components/InputField';
-import React from 'react';
+import React, { useState } from 'react';
+import { createUrqlClient } from '../../utils/createUrqlClient';
+import { NextUrqlClientConfig, withUrqlClient } from 'next-urql';
 
 interface formValues {
-  newPassword: string
+  newPassword: string;
 }
 
 const ChangePassword: NextPage<{ token: string }> = ({token}) => {
   const router = useRouter();
-  const [{}, login] = useLoginMutation();
+  const [{}, changePassword] = useChangePasswordMutation();
+  const [tokenError, setTokenError] = useState('');
   return (
     <Wrapper variant={'small'}>
       <Formik
@@ -22,12 +25,19 @@ const ChangePassword: NextPage<{ token: string }> = ({token}) => {
           values: formValues,
           {setErrors}: FormikHelpers<formValues>
         ) => {
-          // const response = await login(values);
-          // if (response.data?.login.errors) {
-          //   setErrors(toErrorMap(response.data.login.errors));
-          // } else if (response.data?.login.user) {
-          //   await router.push('/');
-          // }
+          const response = await changePassword({
+            newPassword: values.newPassword,
+            token
+          });
+          if (response.data?.changePassword.errors) {
+            const errorMap = toErrorMap(response.data.changePassword.errors);
+            if ('token' in errorMap) {
+              setTokenError(errorMap.token)
+            }
+            setErrors(errorMap);
+          } else {
+            await router.push('/');
+          }
         }}
       >
         {({
@@ -36,6 +46,9 @@ const ChangePassword: NextPage<{ token: string }> = ({token}) => {
           }) => (
           <Form className="bg-white shadow-md card py-8 px-4">
             <InputField label={'New password'} id={'newPassword'} name={'newPassword'} type={'password'}/>
+            {tokenError && (
+              <span className={"block text-red-500 text-sm"}>{tokenError}</span>
+            )}
             <button
               className={`group bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded focus:outline-none focus:shadow-outline ${isSubmitting ? `submitting` : ''}`}
               type="submit">
@@ -54,4 +67,4 @@ ChangePassword.getInitialProps = async ({query}) => {
   };
 };
 
-export default ChangePassword;
+export default withUrqlClient(createUrqlClient as NextUrqlClientConfig)(ChangePassword);
