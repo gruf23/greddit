@@ -2,7 +2,9 @@ import { Arg, Ctx, Field, InputType, Mutation, ObjectType, Query, Resolver } fro
 import { MyContext } from '../types';
 import { User } from '../entities/User';
 import * as argon2 from 'argon2';
-import { COOKIE_NAME } from '../constants';
+import { COOKIE_NAME, FORGOT_PASSWORD_PREFIX } from '../constants';
+import { sendEmail } from '../utils/sendEmail';
+import { v4 } from 'uuid';
 
 @InputType()
 class UsernamePasswordInput {
@@ -10,6 +12,8 @@ class UsernamePasswordInput {
   username: string;
   @Field()
   password: string;
+  @Field()
+  email: string;
 }
 
 @ObjectType()
@@ -44,6 +48,26 @@ export class UserResolver {
     @Arg('options') options: UsernamePasswordInput,
     @Ctx() {em, req}: MyContext
   ): Promise<UserResponse> {
+    if (options.username.includes('@')) {
+      return {
+        errors: [
+          {
+            field: 'username',
+            message: 'cannot include an @'
+          }
+        ]
+      };
+    }
+    if (!options.email.includes('@')) {
+      return {
+        errors: [
+          {
+            field: 'email',
+            message: 'invalid email'
+          }
+        ]
+      };
+    }
     if (options.username.length <= 2) {
       return {
         errors: [
@@ -64,23 +88,31 @@ export class UserResolver {
         ]
       };
     }
-    const existingUser = await em.findOne(User, {username: options.username});
-    if (existingUser) {
-      return {
-        errors: [
-          {
-            field: 'username',
-            message: 'this username is already taken'
-          }
-        ]
-      };
-    }
     const hashedPassword = await argon2.hash(options.password);
     const user = em.create(User, {
       username: options.username,
+      email: options.email,
       password: hashedPassword
     });
-    await em.persistAndFlush(user);
+    try {
+      await em.persistAndFlush(user);
+    } catch (err) {
+      if (err.detail.includes('already exists')) {
+        return {
+          errors: [
+            {
+              field: 'email',
+              message: 'this is taken already'
+            },
+            {
+              field: 'username',
+              message: 'or this is taken already'
+            }
+          ]
+        };
+      }
+    }
+
     req.session.userId = user.id;
     return {
       user
@@ -89,21 +121,24 @@ export class UserResolver {
 
   @Mutation(() => UserResponse)
   async login(
-    @Arg('options') options: UsernamePasswordInput,
+    @Arg('usernameOrEmail') usernameOrEmail: string,
+    @Arg('password') password: string,
     @Ctx() {em, req}: MyContext
   ): Promise<UserResponse> {
-    const user = await em.findOne(User, {username: options.username});
+    const user = await em.findOne(User, usernameOrEmail.includes('@')
+      ? {email: usernameOrEmail}
+      : {username: usernameOrEmail});
     if (!user) {
       return {
         errors: [
           {
-            field: 'username',
-            message: `Couldn't fiend such a user with login ${options.username}`
+            field: 'usernameOrEmail',
+            message: `User not found`
           },
         ]
       };
     }
-    const isPasswordValid = await argon2.verify(user.password, options.password);
+    const isPasswordValid = await argon2.verify(user.password, password);
     if (!isPasswordValid) {
       return {
         errors: [
@@ -138,5 +173,28 @@ export class UserResolver {
         resolve(true);
       });
     });
+  }
+
+  @Mutation(() => Boolean)
+  async forgotPassword(
+    @Arg('email') email: string,
+    @Ctx() {em, redis}: MyContext
+  ) {
+    const user = await em.findOne(User, {email: email});
+    if (!user) {
+      // email is not in the db
+      return true;
+    }
+
+    const token = v4();
+    await redis.set(FORGOT_PASSWORD_PREFIX + token, user.id, 'ex', 1000 * 60 * 60 * 24)
+
+    await sendEmail(
+      email,
+      'Password recovery',
+      `<a href="http://localhost:3000/change-password/${token}">Reset password</a>`
+    );
+
+    return true;
   }
 }
