@@ -7,6 +7,7 @@ import { toErrorMap } from '../utils/toErrorMap';
 import { useRouter } from 'next/router';
 import { createUrqlClient } from '../utils/createUrqlClient';
 import { NextUrqlClientConfig, withUrqlClient } from 'next-urql';
+import Link from 'next/link';
 
 interface loginProps {
 
@@ -43,11 +44,14 @@ const Login: React.FC<loginProps> = ({}) => {
           <Form className="bg-white shadow-md card py-8 px-4">
             <InputField label={'Username or Email'} id={'usernameOrEmail'} name={'usernameOrEmail'}/>
             <InputField label={'Password'} id={'password'} name={'password'} type={'password'}/>
-            <button
-              className={`group bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded focus:outline-none focus:shadow-outline ${isSubmitting ? `submitting` : ''}`}
-              type="submit">
-              Login
-            </button>
+            <div className="flex items-center justify-between">
+              <button
+                className={`group bg-blue-500 hover:bg-blue-700 text-white py-2 px-4 rounded focus:outline-none focus:shadow-outline ${isSubmitting ? `submitting` : ''}`}
+                type="submit">
+                Login
+              </button>
+              <Link href={'/forgot-password'}><a className={'hover:underline'}>Forgot password</a></Link>
+            </div>
           </Form>
         )}
       </Formik>
